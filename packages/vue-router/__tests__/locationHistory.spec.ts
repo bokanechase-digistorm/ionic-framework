@@ -105,4 +105,29 @@ describe('Location History', () => {
     expect(locationHistory.findLastLocation(pageC, -2)).toEqual(pageA);
     expect(locationHistory.findLastLocation(pageC, -3)).toEqual(home);
   });
+
+  it('should preserve tab history when replacing with root direction within a tab', () => {
+    // Simulate navigation within a tab
+    locationHistory.add({ id: '1', pathname: '/tabs/tab1', tab: 'tab1' });
+    locationHistory.add({ id: '2', pathname: '/tabs/tab1/view1', tab: 'tab1', pushedByRoute: '/tabs/tab1' });
+    
+    // Switch to another tab
+    locationHistory.add({ id: '3', pathname: '/tabs/tab2', tab: 'tab2' });
+    
+    // Switch back to first tab
+    locationHistory.add({ id: '4', pathname: '/tabs/tab1/view1', tab: 'tab1', pushedByRoute: '/tabs/tab1' });
+    
+    // Replace view1 with view2 using root direction (simulating ionRouter.replace)
+    locationHistory.add({ id: '5', pathname: '/tabs/tab1/view2', tab: 'tab1', routerAction: 'replace', routerDirection: 'root', pushedByRoute: '/tabs/tab1' });
+    
+    // Tab history should still exist
+    const tab1History = locationHistory.getCurrentRouteInfoForTab('tab1');
+    expect(tab1History).toBeDefined();
+    expect(tab1History.pathname).toEqual('/tabs/tab1/view2');
+    
+    // Should be able to find the first route for the tab
+    const firstTab1Route = locationHistory.getFirstRouteInfoForTab('tab1');
+    expect(firstTab1Route).toBeDefined();
+    expect(firstTab1Route.pathname).toEqual('/tabs/tab1');
+  });
 });
