@@ -420,6 +420,7 @@ export const createIonRouter = (
           routeInfo.routerAnimation =
             currentRouteInfo?.routerAnimation || routeInfo.routerAnimation;
           routeInfo.prevRouteLastPathname = currentRouteInfo?.lastPathname;
+          routeInfo.tab = currentRouteInfo?.tab || routeInfo.tab;
         }
       }
 

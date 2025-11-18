@@ -14,7 +14,7 @@ export const createLocationHistory = () => {
         break;
     }
 
-    if (routeInfo.routerDirection === "root") {
+    if (routeInfo.routerDirection === "root" && !routeInfo.tab) {
       clearHistory();
       addRoute(routeInfo);
     }
@@ -243,7 +243,7 @@ export const createLocationHistory = () => {
       const ri = locationHistory[i];
       if (ri) {
         if (ri.pathname === routeInfo.pushedByRoute) {
-          return locationHistory[i + 1 + delta]
+          return locationHistory[i + 1 + delta];
         }
       }
     }
