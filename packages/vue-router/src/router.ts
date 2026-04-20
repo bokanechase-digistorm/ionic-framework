@@ -457,10 +457,10 @@ export const createIonRouter = (
               currentRouteInfo.pathname
             );
             const incomingResolved = router.resolve(routeInfo.pathname);
-            const shareParentRoute = currentResolved.matched.some(
+            const sharesParentRoute = currentResolved.matched.some(
               (matchedRoute) => incomingResolved.matched.includes(matchedRoute)
             );
-            if (shareParentRoute) {
+            if (sharesParentRoute) {
               routeInfo.tab = currentRouteInfo.tab;
             }
           }
