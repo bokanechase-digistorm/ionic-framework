@@ -230,9 +230,16 @@ export const createIonRouter = (
           currentHistoryPosition
         );
       } else if (incomingRouteParams.routerAction === "pop") {
+        /**
+         * When going back multiple steps (e.g. router.go(-3)),
+         * the leaving location is not at currentHistoryPosition + 1
+         * but at currentHistoryPosition + Math.abs(delta). This
+         * ensures the correct leaving view is found so
+         * page transitions can properly hide the leaving view.
+         */
         leavingLocationInfo = locationHistory.current(
           initialHistoryPosition,
-          currentHistoryPosition + 1
+          currentHistoryPosition + Math.abs(delta ?? 1)
         );
 
         /**
@@ -420,6 +427,7 @@ export const createIonRouter = (
           routeInfo.routerAnimation =
             currentRouteInfo?.routerAnimation || routeInfo.routerAnimation;
           routeInfo.prevRouteLastPathname = currentRouteInfo?.lastPathname;
+          routeInfo.tab = currentRouteInfo?.tab || routeInfo.tab;
         }
       }
 
