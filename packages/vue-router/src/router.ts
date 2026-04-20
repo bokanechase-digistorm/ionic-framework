@@ -231,11 +231,19 @@ export const createIonRouter = (
         );
       } else if (incomingRouteParams.routerAction === "pop") {
         /**
-         * When going back multiple steps (e.g. router.go(-3)),
-         * the leaving location is not at currentHistoryPosition + 1
-         * but at currentHistoryPosition + Math.abs(delta). This
-         * ensures the correct leaving view is found so
-         * page transitions can properly hide the leaving view.
+         * When going back, the leaving location is at the position
+         * we just came from. Since currentHistoryPosition has already
+         * been updated to the new (destination) position by this point,
+         * we add the absolute delta to find the old position.
+         *
+         * For simple router.back() calls, delta is 1 and this is
+         * equivalent to currentHistoryPosition + 1. However, in tabbed
+         * navigation, going back within a tab can involve skipping over
+         * interleaved tab switch entries in the browser history. For
+         * example, handleNavigateBack uses router.go(prevInfo.position -
+         * routeInfo.position) which may produce a delta greater than 1
+         * (e.g. router.go(-3)). In that case we need Math.abs(delta) to
+         * find the correct leaving position.
          */
         leavingLocationInfo = locationHistory.current(
           initialHistoryPosition,
@@ -427,7 +435,35 @@ export const createIonRouter = (
           routeInfo.routerAnimation =
             currentRouteInfo?.routerAnimation || routeInfo.routerAnimation;
           routeInfo.prevRouteLastPathname = currentRouteInfo?.lastPathname;
-          routeInfo.tab = currentRouteInfo?.tab || routeInfo.tab;
+
+          /**
+           * When replacing within a tab (e.g. /tabs/tab1/view1 →
+           * /tabs/tab1/view2), we need to preserve the tab so that
+           * clearHistory and addRoute scope their work to the
+           * correct tab stack. Without this, all tab histories
+           * would be wiped instead of just the current tab's.
+           *
+           * However, we should only carry over the tab when the
+           * incoming route belongs to the same routing context
+           * (i.e. shares a parent matched route). If the
+           * replacement navigates outside of tabs entirely
+           * (e.g. /tabs/tab2 → /something/else), inheriting the
+           * tab would incorrectly scope history cleanup and
+           * leave a stale tab reference since handleSetCurrentTab
+           * will not run for non-tab routes.
+           */
+          if (currentRouteInfo?.tab) {
+            const currentResolved = router.resolve(
+              currentRouteInfo.pathname
+            );
+            const incomingResolved = router.resolve(routeInfo.pathname);
+            const shareParentRoute = currentResolved.matched.some(
+              (matchedRoute) => incomingResolved.matched.includes(matchedRoute)
+            );
+            if (shareParentRoute) {
+              routeInfo.tab = currentRouteInfo.tab;
+            }
+          }
         }
       }
 
